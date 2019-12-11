@@ -42,6 +42,7 @@ Usage:
  - **如果你需要归档符号表文件，那么添加--symbols参数，默认不会执行**
  - 以上参数为同时作用生效，即**与**的关系
  - 产物和符号表归档目录为/path/to/engine/src/out/engine/artifacts和/path/to/engine/src/out/engine/symbols下
+ - iOS的产物归档需要同时构建完对应构建类型(debug，profile，release)下的arm，arm64，debug_sim产物，否则归档会失败
  
 如果你需要构建iOS debug产物，并进行归档，同时备份符号表，则执行
 
