@@ -1,0 +1,326 @@
+#!/usr/bin/env python
+# coding=utf-8
+# Copyright 2019 区长. All rights reserved.
+
+import argparse
+import os
+import stat
+import subprocess
+import sys
+import shutil
+import platform
+
+"""Tool for build flutter engine.
+
+Usage:
+  flutter_engine_build \
+  --local-engine-src-path /path/to/engine/src \
+  --no-ios \
+  --no-android \
+  --no-arm \
+  --no-arm64 \
+  --no-x86 \
+  --no-x64 \ 
+  --no-debug \
+  --no-profile \
+  --no-release \
+  --gn \
+  --clean \
+  --build \
+  --artifacts \
+  --symbols
+"""
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Build Flutter Engine Tool')
+    parser.add_argument('--local-engine-src-path', type=str, help="flutter local engine src")
+    parser.add_argument('--android', default=True, action='store_true')
+    parser.add_argument('--no-android', dest='android', action='store_false')
+    parser.add_argument('--ios', default=True, action='store_true')
+    parser.add_argument('--no-ios', dest='ios', action='store_false')
+    parser.add_argument('--arm', default=True, action='store_true')
+    parser.add_argument('--no-arm', dest='arm', action='store_false')
+    parser.add_argument('--arm64', default=True, action='store_true')
+    parser.add_argument('--no-arm64', dest='arm64', action='store_false')
+    parser.add_argument('--x86', default=True, action='store_true')
+    parser.add_argument('--no-x86', dest='x86', action='store_false')
+    parser.add_argument('--x64', default=True, action='store_true')
+    parser.add_argument('--no-x64', dest='x64', action='store_false')
+    parser.add_argument('--debug', default=True, action='store_true')
+    parser.add_argument('--no-debug', dest='debug', action='store_false')
+    parser.add_argument('--release', default=True, action='store_true')
+    parser.add_argument('--no-release', dest='release', action='store_false')
+    parser.add_argument('--profile', default=True, action='store_true')
+    parser.add_argument('--no-profile', dest='profile', action='store_false')
+    parser.add_argument('--gn', default=False, action='store_true')
+    parser.add_argument('--no-gn', dest='gn', action='store_false')
+    parser.add_argument('--clean', default=False, action='store_true')
+    parser.add_argument('--no-clean', dest='clean', action='store_false')
+    parser.add_argument('--build', default=False, action='store_true')
+    parser.add_argument('--no-build', dest='build', action='store_false')
+    parser.add_argument('--artifacts', default=False, action='store_true')
+    parser.add_argument('--no-artifacts', dest='artifacts', action='store_false')
+    parser.add_argument('--symbols', default=False, action='store_true')
+    parser.add_argument('--no-symbols', dest='symbols', action='store_false')
+    return run(parser.parse_args())
+
+
+def run(args):
+    flutter_src = args.local_engine_src_path
+    if not flutter_src:
+        print 'You should provide --local-engine-src-path=/path/to/engine/src'
+        return 1
+    flutter_gn = os.path.join(flutter_src, "flutter", "tools", "gn")
+
+    if args.android:
+        # debug
+        if args.debug:
+            if args.arm:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'debug', '--android-cpu', 'arm', '--android'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_debug"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_debug"), '-j', '8'])
+                copy_android_artifacts_and_symbols(args, flutter_src, "android_debug", "android-arm")
+            if args.arm64:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'debug', '--android-cpu', 'arm64', '--android'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_debug_arm64"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_debug_arm64"), '-j', '8'])
+                copy_android_artifacts_and_symbols(args, flutter_src, "android_debug_arm64", "android-arm64")
+            if args.x86:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'debug', '--android-cpu', 'x86', '--android'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_debug_x86"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_debug_x86"), '-j', '8'])
+                copy_android_artifacts_and_symbols(args, flutter_src, "android_debug_x86", "android-x86")
+            if args.x64:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'debug', '--android-cpu', 'x64', '--android'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_debug_x64"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_debug_x64"), '-j', '8'])
+                copy_android_artifacts_and_symbols(args, flutter_src, "android_debug_x64", "android-x64")
+        # profile
+        if args.profile:
+            if args.arm:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'profile', '--android-cpu', 'arm', '--android'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_profile"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_profile"), '-j', '8'])
+                copy_android_artifacts_and_symbols(args, flutter_src, "android_profile", "android-arm-profile")
+            if args.arm64:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'profile', '--android-cpu', 'arm64', '--android'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_profile_arm64"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_profile_arm64"), '-j', '8'])
+                copy_android_artifacts_and_symbols(args, flutter_src, "android_profile_arm64", "android-arm64-profile")
+        # release
+        if args.release:
+            if args.arm:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'release', '--android-cpu', 'arm', '--android'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_release"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_release"), '-j', '8'])
+            copy_android_artifacts_and_symbols(args, flutter_src, "android_release", "android-arm-release")
+            if args.arm64:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'release', '--android-cpu', 'arm64', '--android'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_release_arm64"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "android_release_arm64"), '-j', '8'])
+                copy_android_artifacts_and_symbols(args, flutter_src, "android_release_arm64", "android-arm64-release")
+    if args.ios:
+        # debug
+        if args.debug:
+            if args.arm:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'debug', '--ios-cpu', 'arm', '--ios'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_debug_arm"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_debug_arm"), '-j', '8'])
+            if args.arm64:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'debug', '--ios-cpu', 'arm64', '--ios'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_debug"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_debug"), '-j', '8'])
+            if args.x64:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'debug', '--simulator', '--ios'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_debug_sim"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_debug_sim"), '-j', '8'])
+            copy_ios_artifacts_and_symbols(args, flutter_src, "ios_debug", "ios_debug_arm", "ios_debug_sim", "ios")
+        # profile
+        if args.profile:
+            if args.arm:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'profile', '--ios-cpu', 'arm', '--ios'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_profile_arm"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_profile_arm"), '-j', '8'])
+            if args.arm64:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'profile', '--ios-cpu', 'arm64', '--ios'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_profile"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_profile"), '-j', '8'])
+            copy_ios_artifacts_and_symbols(args, flutter_src, "ios_profile", "ios_profile_arm", "ios_debug_sim",
+                                           "ios-profile")
+        # release
+        if args.release:
+            if args.arm:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'release', '--ios-cpu', 'arm', '--ios'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_release_arm"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_release_arm"), '-j', '8'])
+            if args.arm64:
+                if args.gn:
+                    subprocess.check_call(
+                        [flutter_gn, '--runtime-mode', 'release', '--ios-cpu', 'arm64', '--ios'])
+                if args.clean:
+                    subprocess.call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_release"), '-t', 'clean'])
+                if args.build:
+                    subprocess.check_call(
+                        ['ninja', '-C', os.path.join(flutter_src, "out", "ios_release"), '-j', '8'])
+            copy_ios_artifacts_and_symbols(args, flutter_src, "ios_release", "ios_release_arm", "ios_debug_sim",
+                                           "ios-release")
+    return 0
+
+
+def copy_ios_artifacts_and_symbols(args, flutter_src, src_arm64_dir, src_arm_dir, src_sim_dir, dest_dir):
+    flutter_create_ios_framework = os.path.join(flutter_src, "flutter", "sky", "tools", "create_ios_framework.py")
+    flutter_create_macos_gen_snapshots = os.path.join(flutter_src, "flutter", "sky", "tools",
+                                                      "create_macos_gen_snapshots.py")
+
+    flutter_out = os.path.join(flutter_src, "out", "engine")
+    flutter_out_artifacts = os.path.join(flutter_out, "artifacts")
+    flutter_out_symbols = os.path.join(flutter_out, "symbols")
+    current_artifacts = os.path.join(flutter_out_artifacts, dest_dir)
+    current_symbols = os.path.join(flutter_out_symbols, dest_dir)
+    if args.artifacts and dest_dir.__contains__("ios"):
+        shutil.rmtree(current_artifacts, ignore_errors=True)
+        os.makedirs(current_artifacts)
+        shutil.copyfile(os.path.join(flutter_src, "out", src_arm64_dir, "Flutter.podspec"),
+                        os.path.join(current_artifacts, "Flutter.podspec"))
+        shutil.copyfile(os.path.join(flutter_src, "out", src_arm64_dir, "LICENSE"),
+                        os.path.join(current_artifacts, "LICENSE"))
+
+        framework_command = [flutter_create_ios_framework, '--arm64-out-dir',
+                             os.path.join(flutter_src, "out", src_arm64_dir),
+                             '--armv7-out-dir', os.path.join(flutter_src, "out", src_arm_dir), '--simulator-out-dir',
+                             os.path.join(flutter_src, "out", src_sim_dir),
+                             '--dst', current_artifacts, "--dsym"]
+        if dest_dir.__contains__("release"):
+            framework_command.append("--strip")
+        subprocess.check_call(framework_command)
+        subprocess.check_call(
+            [flutter_create_macos_gen_snapshots, '--arm64-out-dir', os.path.join(flutter_src, "out", src_arm64_dir),
+             '--armv7-out-dir', os.path.join(flutter_src, "out", src_arm_dir), '--dst', current_artifacts])
+        if args.symbols:
+            shutil.rmtree(current_symbols, ignore_errors=True)
+            os.makedirs(current_symbols)
+            shutil.move(os.path.join(current_artifacts, "Flutter.dSYM"), os.path.join(current_symbols, "Flutter.dSYM"))
+            if dest_dir.__contains__("release"):
+                shutil.move(os.path.join(current_artifacts, "Flutter.unstripped"),
+                            os.path.join(current_symbols, "Flutter.unstripped"))
+
+
+def copy_android_artifacts_and_symbols(args, flutter_src, src_dir, dest_dir):
+    flutter_out = os.path.join(flutter_src, "out", "engine")
+    flutter_out_artifacts = os.path.join(flutter_out, "artifacts")
+    flutter_out_symbols = os.path.join(flutter_out, "symbols")
+    current_artifacts = os.path.join(flutter_out_artifacts, dest_dir)
+    current_symbols = os.path.join(flutter_out_symbols, dest_dir)
+    if args.artifacts and src_dir.__contains__("android"):
+        shutil.rmtree(current_artifacts, ignore_errors=True)
+        os.makedirs(current_artifacts)
+        shutil.copyfile(os.path.join(flutter_src, "out", src_dir, "flutter.jar"),
+                        os.path.join(current_artifacts, "flutter.jar"))
+        if src_dir.__contains__("x86") or src_dir.__contains__("x64"):
+            shutil.copyfile(os.path.join(flutter_src, "out", src_dir, "lib.stripped", "libflutter.so"),
+                            os.path.join(current_artifacts, "libflutter.so"))
+        if src_dir.__contains__("profile") or src_dir.__contains__("release"):
+            current_snapshot_dir = os.path.join(current_artifacts, "%s-x64" % platform.system().lower())
+            current_snapshot_file = os.path.join(current_snapshot_dir, "gen_snapshot")
+            os.makedirs(current_snapshot_dir)
+            shutil.copyfile(os.path.join(flutter_src, "out", src_dir, "clang_x64", "gen_snapshot"),
+                            os.path.join(current_snapshot_dir, "gen_snapshot"))
+            os.chmod(current_snapshot_file, (os.stat(current_snapshot_file).st_mode | stat.S_IEXEC))
+
+    if args.symbols and src_dir.__contains__("android"):
+        shutil.rmtree(current_symbols, ignore_errors=True)
+        os.makedirs(current_symbols)
+        shutil.copyfile(os.path.join(flutter_src, "out", src_dir, "libflutter.so"),
+                        os.path.join(current_symbols, "flutter.so"))
+        shutil.copyfile(os.path.join(flutter_src, "out", src_dir, "libflutter.so.TOC"),
+                        os.path.join(current_symbols, "flutter.so.TOC"))
+
+
+if __name__ == '__main__':
+    sys.exit(main())
