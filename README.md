@@ -25,7 +25,7 @@ Usage:
 
 
 提示:
- - 如果你不需要执行ios相关脚本，那么添加--no-ios参数，默认都会执行
+ - 如果你不需要执行iOS相关脚本，那么添加--no-ios参数，默认都会执行
  - 如果你不需要执行android相关脚本，那么添加--no-android参数，默认都会执行
  - 如果你不需要执行arm相关脚本，那么添加--no-arm参数，默认都会执行
  - 如果你不需要执行arm64相关脚本，那么添加--no-arm64参数，默认都会执行
@@ -35,15 +35,15 @@ Usage:
  - 如果你不需要执行debug相关脚本，那么添加--no-debug参数，默认都会执行
  - 如果你不需要执行profile相关脚本，那么添加--no-profile参数，默认都会执行
  - 如果你不需要执行release相关脚本，那么添加--no-release参数，默认都会执行
- - 如果你需要调用gn生成ninja配置文件，那么添加--gn参数，默认不会执行
- - 如果你需要调用ninja执行clean，那么添加--clean参数，默认不会执行
- - 如果你需要调用ninja执行build，那么添加--build参数，默认不会执行
+ - 如果你需要调用gn生成Ninja配置文件，那么添加--gn参数，默认不会执行
+ - 如果你需要调用Ninja执行clean，那么添加--clean参数，默认不会执行
+ - 如果你需要调用Ninja执行build，那么添加--build参数，默认不会执行
  - **如果你需要按cache目录结构归档产物，那么添加--artifacts参数，默认不会执行**
  - **如果你需要归档符号表文件，那么添加--symbols参数，默认不会执行**
  - 以上参数为同时作用生效，即**与**的关系
  - 产物和符号表归档目录为/path/to/engine/src/out/engine/artifacts和/path/to/engine/src/out/engine/symbols下
  
-如你需要构建iOS debug产物，并进行归档，同时备份符号表，则执行
+如果你需要构建iOS debug产物，并进行归档，同时备份符号表，则执行
 
 ```
 ./flutter_engine_build \
@@ -54,6 +54,34 @@ Usage:
   --gn \
   --clean \
   --build \
+  --artifacts \
+  --symbols
+```
+
+如果你需要构建Android profile arm64产物，并进行归档，同时备份符号表，则执行
+
+```
+./flutter_engine_build \
+  --local-engine-src-path /path/to/engine/src \
+  --no-ios \
+  --no-debug \
+  --no-release \
+  --no-arm \
+  --no-x86 \
+  --no-x64 \
+  --gn \
+  --clean \
+  --build \
+  --artifacts \
+  --symbols
+```
+
+如果你不需要执行Ninja构建，仅仅是归档iOS产物和符号表，则执行
+
+```
+./flutter_engine_build \
+  --local-engine-src-path /path/to/engine/src \
+  --no-android \
   --artifacts \
   --symbols
 ```
