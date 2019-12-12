@@ -1,6 +1,7 @@
 # flutter_engine_build
 
-Flutter Engine 构建产物归档及构建辅助脚本，可用于持续集成环境
+Flutter Engine 构建产物归档及构建辅助脚本，可用于持续集成环境，见 
+ - [Flutter Engine 产物归档与符号表备份](https://fucknmb.com/2019/12/12/Flutter-Engine%E4%BA%A7%E7%89%A9%E5%BD%92%E6%A1%A3%E4%B8%8E%E7%AC%A6%E5%8F%B7%E8%A1%A8%E5%A4%87%E4%BB%BD/)
 
 Usage:
 
